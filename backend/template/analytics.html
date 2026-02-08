@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Watch - Real Asteroid Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --space-blue: #0a0e17;
+            --cosmic-purple: #4a1e7c;
+            --neon-blue: #00c6ff;
+            --neon-cyan: #00ffea;
+            --hazard-red: #ff3366;
+            --safe-green: #00ff9d;
+            --warning-yellow: #ffd166;
+            --text-light: #e0f7ff;
+            --text-gray: #8a9bb8;
+            --card-bg: rgba(16, 22, 36, 0.8);
+            --border-glow: rgba(0, 198, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--space-blue);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(74, 30, 124, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 198, 255, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            color: var(--neon-blue);
+            font-size: 24px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background: rgba(0, 198, 255, 0.1);
+            color: var(--neon-cyan);
+        }
+
+        .nav-link.active {
+            background: rgba(0, 198, 255, 0.2);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            position: relative;
+            font-size: 20px;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--hazard-red);
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--cosmic-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px 0 50px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .page-subtitle {
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .time-filter {
+            background: var(--card-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-light);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(to right, var(--cosmic-purple), var(--neon-blue));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Analytics Grid */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--neon-blue), var(--neon-cyan));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 198, 255, 0.2);
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(74, 30, 124, 0.3), rgba(10, 14, 23, 0.9));
+            border-color: var(--neon-cyan);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--neon-blue);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--safe-green);
+        }
+
+        .stat-change.negative {
+            color: var(--hazard-red);
+        }
+
+        .stat-change.neutral {
+            color: var(--warning-yellow);
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--neon-cyan);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Risk Distribution Section */
+        .risk-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            color: var(--neon-cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .risk-levels {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .risk-level {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .risk-level:hover {
+            transform: scale(1.05);
+        }
+
+        .risk-level.critical {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.2), rgba(255, 51, 102, 0.05));
+            border: 1px solid rgba(255, 51, 102, 0.5);
+        }
+
+        .risk-level.high {
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.2), rgba(255, 209, 102, 0.05));
+            border: 1px solid rgba(255, 209, 102, 0.5);
+        }
+
+        .risk-level.medium {
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(0, 198, 255, 0.05));
+            border: 1px solid rgba(0, 198, 255, 0.5);
+        }
+
+        .risk-level.low {
+            background: linear-gradient(135deg, rgba(0, 255, 157, 0.2), rgba(0, 255, 157, 0.05));
+            border: 1px solid rgba(0, 255, 157, 0.5);
+        }
+
+        .risk-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .risk-count {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .risk-description {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        /* Upcoming Threats Table */
+        .threats-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+        }
+
+        .threats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .view-all-btn {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-all-btn:hover {
+            background: rgba(0, 198, 255, 0.1);
+        }
+
+        .threats-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .threats-table th {
+            text-align: left;
+            padding: 12px 15px;
+            color: var(--text-gray);
+            font-weight: 500;
+            border-bottom: 1px solid rgba(0, 198, 255, 0.2);
+        }
+
+        .threats-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(138, 155, 184, 0.1);
+        }
+
+        .threats-table tr:hover {
+            background: rgba(0, 198, 255, 0.05);
+        }
+
+        .asteroid-name {
+            font-weight: 600;
+            color: var(--neon-cyan);
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .risk-badge.critical {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--hazard-red);
+        }
+
+        .risk-badge.high {
+            background: rgba(255, 209, 102, 0.2);
+            color: var(--warning-yellow);
+        }
+
+        .risk-badge.medium {
+            background: rgba(0, 198, 255, 0.2);
+            color: var(--neon-blue);
+        }
+
+        .risk-badge.low {
+            background: rgba(0, 255, 157, 0.2);
+            color: var(--safe-green);
+        }
+
+        .distance {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .date {
+            color: var(--text-gray);
+        }
+
+        .action-btn {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 198, 255, 0.1);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 198, 255, 0.2);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* API Status */
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--safe-green);
+            margin-top: 5px;
+        }
+
+        .api-status.offline {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--hazard-red);
+        }
+
+        .api-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--safe-green);
+        }
+
+        .api-status.offline .api-status-dot {
+            background-color: var(--hazard-red);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .analytics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .risk-levels {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .risk-levels {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .threats-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-satellite"></i></div>
+                <div class="logo-text">COSMIC WATCH</div>
+            </div>
+             <a href="{% url 'dashboard' %}" class="back-btn">
+                <span>←</span> Back to Dashboard
+            </a>
+            <!-- <nav class="nav-links">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="analytics.html" class="nav-link active">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+                <a href="alerts.html" class="nav-link">
+                    <i class="fas fa-bell"></i> Alerts
+                </a>
+                <a href="visualization.html" class="nav-link">
+                    <i class="fas fa-globe-americas"></i> 3D View
+                </a>
+                <a href="chat.html" class="nav-link">
+                    <i class="fas fa-comments"></i> Community
+                </a>
+            </nav> -->
+            
+            <div class="user-info">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge">3</div>
+                </div>
+                <div class="user-avatar">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Asteroid Risk Analytics</h1>
+                    <p class="page-subtitle">Real-time analysis of Near-Earth Objects using NASA NEO API</p>
+                    <div class="api-status" id="apiStatus">
+                        <div class="api-status-dot"></div>
+                        <span>NASA API: Connecting...</span>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <select class="time-filter" id="timeFilter">
+                        <option value="today">Today</option>
+                        <option value="week" selected>This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                    
+                    <button class="refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Stats Grid -->
+            <div class="analytics-grid" id="statsGrid">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <!-- Size Distribution Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Asteroid Size Distribution</h3>
+                        <div class="chart-legend" id="sizeLegend">
+                            <!-- Legend will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="sizeDistributionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Velocity vs Distance Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Velocity vs Distance</h3>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #00c6ff;"></div>
+                                <span>Non-Hazardous</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #ff3366;"></div>
+                                <span>Hazardous</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="velocityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Level Distribution -->
+            <div class="risk-section">
+                <h2 class="section-title"><i class="fas fa-radiation-alt"></i> Risk Level Distribution</h2>
+                <div class="risk-levels" id="riskLevels">
+                    <!-- Risk levels will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Upcoming Threats Table -->
+            <div class="threats-section">
+                <div class="threats-header">
+                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Upcoming Close Approaches</h2>
+                    <button class="view-all-btn" id="viewAllBtn">View All</button>
+                </div>
+                
+                <table class="threats-table" id="threatsTable">
+                    <thead>
+                        <tr>
+                            <th>Asteroid Name</th>
+                            <th>Hazardous</th>
+                            <th>Diameter (km)</th>
+                            <th>Miss Distance</th>
+                            <th>Velocity (km/s)</th>
+                            <th>Close Approach</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="threatsTableBody">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript for NASA NEO API Integration -->
+    <script>
+        // NASA NEO API Configuration
+        const NASA_API_KEY = '68qAj5eRO28O0LBVBJUS596b6kYwhHGsgkE4DgMQ'; // Replace with your NASA API key
+        const NASA_BASE_URL = 'https://api.nasa.gov/neo/rest/v1';
+        
+        // DOM Elements
+        const statsGrid = document.getElementById('statsGrid');
+        const riskLevels = document.getElementById('riskLevels');
+        const threatsTableBody = document.getElementById('threatsTableBody');
+        const timeFilter = document.getElementById('timeFilter');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const apiStatus = document.getElementById('apiStatus');
+        const viewAllBtn = document.getElementById('viewAllBtn');
+        
+        // Chart instances
+        let sizeDistributionChart = null;
+        let velocityChart = null;
+        
+        // Data storage
+        let neoData = [];
+        let hazardousNeos = [];
+        let nonHazardousNeos = [];
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            updateApiStatus('connecting');
+            loadNASAData();
+            setupEventListeners();
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            refreshBtn.addEventListener('click', loadNASAData);
+            timeFilter.addEventListener('change', handleTimeFilterChange);
+            viewAllBtn.addEventListener('click', () => {
+                alert('In a full implementation, this would show all asteroids in a separate view.');
+            });
+        }
+        
+        // Handle time filter change
+        function handleTimeFilterChange() {
+            loadNASAData();
+        }
+        
+        // Update API status display
+        function updateApiStatus(status) {
+            const statusDot = apiStatus.querySelector('.api-status-dot');
+            const statusText = apiStatus.querySelector('span');
+            
+            switch(status) {
+                case 'connected':
+                    apiStatus.className = 'api-status';
+                    statusText.textContent = 'NASA API: Connected';
+                    statusDot.style.backgroundColor = '#00ff9d';
+                    break;
+                case 'error':
+                    apiStatus.className = 'api-status offline';
+                    statusText.textContent = 'NASA API: Error - Using cached data';
+                    statusDot.style.backgroundColor = '#ff3366';
+                    break;
+                case 'connecting':
+                    apiStatus.className = 'api-status';
+                    statusText.textContent = 'NASA API: Connecting...';
+                    statusDot.style.backgroundColor = '#ffd166';
+                    break;
+            }
+        }
+        
+        // Load data from NASA NEO API
+        async function loadNASAData() {
+            showLoadingState();
+            updateApiStatus('connecting');
+            
+            try {
+                const timeRange = timeFilter.value;
+                let startDate, endDate;
+                
+                // Calculate dates based on selected time range
+                const today = new Date();
+                switch(timeRange) {
+                    case 'today':
+                        startDate = formatDate(today);
+                        endDate = formatDate(today);
+                        break;
+                    case 'week':
+                        startDate = formatDate(new Date(today.setDate(today.getDate() - 7)));
+                        endDate = formatDate(new Date());
+                        break;
+                    case 'month':
+                        startDate = formatDate(new Date(today.setMonth(today.getMonth() - 1)));
+                        endDate = formatDate(new Date());
+                        break;
+                    case 'year':
+                        startDate = formatDate(new Date(today.setFullYear(today.getFullYear() - 1)));
+                        endDate = formatDate(new Date());
+                        break;
+                }
+                
+                // Fetch data from NASA NEO API
+                const response = await fetch(
+                    `${NASA_BASE_URL}/feed?start_date=${startDate}&end_date=${endDate}&api_key=${NASA_API_KEY}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`NASA API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Process the data
+                processNASAData(data);
+                updateApiStatus('connected');
+                
+            } catch (error) {
+                console.error('Error loading NASA data:', error);
+                updateApiStatus('error');
+                
+                // Fallback to sample data if API fails
+                loadSampleData();
+            }
+        }
+        
+        // Process NASA NEO data
+        function processNASAData(data) {
+            neoData = [];
+            hazardousNeos = [];
+            nonHazardousNeos = [];
+            
+            // Extract all NEOs from the data
+            for (const date in data.near_earth_objects) {
+                const neos = data.near_earth_objects[date];
+                neos.forEach(neo => {
+                    const neoObj = {
+                        id: neo.id,
+                        name: neo.name,
+                        designation: neo.designation,
+                        hazardous: neo.is_potentially_hazardous_asteroid,
+                        diameter: {
+                            min: neo.estimated_diameter.kilometers.estimated_diameter_min,
+                            max: neo.estimated_diameter.kilometers.estimated_diameter_max,
+                            avg: (neo.estimated_diameter.kilometers.estimated_diameter_min + 
+                                  neo.estimated_diameter.kilometers.estimated_diameter_max) / 2
+                        },
+                        close_approach_data: neo.close_approach_data.map(approach => ({
+                            date: approach.close_approach_date,
+                            velocity: parseFloat(approach.relative_velocity.kilometers_per_second),
+                            miss_distance: parseFloat(approach.miss_distance.kilometers),
+                            orbiting_body: approach.orbiting_body
+                        }))
+                    };
+                    
+                    neoData.push(neoObj);
+                    
+                    if (neoObj.hazardous) {
+                        hazardousNeos.push(neoObj);
+                    } else {
+                        nonHazardousNeos.push(neoObj);
+                    }
+                });
+            }
+            
+            // Update the UI with real data
+            updateDashboard();
+        }
+        
+        // Update the entire dashboard with processed data
+        function updateDashboard() {
+            updateStatsGrid();
+            updateRiskLevels();
+            updateThreatsTable();
+            updateCharts();
+        }
+        
+        // Show loading state
+        function showLoadingState() {
+            statsGrid.innerHTML = `
+                <div class="stat-card loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading NASA NEO data...</p>
+                </div>
+                <div class="stat-card loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading NASA NEO data...</p>
+                </div>
+                <div class="stat-card loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading NASA NEO data...</p>
+                </div>
+                <div class="stat-card loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading NASA NEO data...</p>
+                </div>
+            `;
+            
+            threatsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner" style="margin: 0 auto 15px;"></div>
+                        <p>Loading asteroid data from NASA...</p>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // Update stats grid with NASA data
+        function updateStatsGrid() {
+            const totalAsteroids = neoData.length;
+            const hazardousCount = hazardousNeos.length;
+            const nonHazardousCount = nonHazardousNeos.length;
+            
+            // Calculate average diameter
+            const avgDiameter = neoData.length > 0 
+                ? neoData.reduce((sum, neo) => sum + neo.diameter.avg, 0) / neoData.length
+                : 0;
+            
+            // Calculate average velocity from closest approach
+            let totalVelocity = 0;
+            let velocityCount = 0;
+            neoData.forEach(neo => {
+                if (neo.close_approach_data.length > 0) {
+                    totalVelocity += neo.close_approach_data[0].velocity;
+                    velocityCount++;
+                }
+            });
+            const avgVelocity = velocityCount > 0 ? totalVelocity / velocityCount : 0;
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card highlight">
+                    <div class="stat-icon"><i class="fas fa-meteor"></i></div>
+                    <div class="stat-value">${totalAsteroids.toLocaleString()}</div>
+                    <div class="stat-label">Total Asteroids Tracked</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-satellite"></i>
+                        Live NASA NEO Data
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-radiation"></i></div>
+                    <div class="stat-value">${hazardousCount}</div>
+                    <div class="stat-label">Potentially Hazardous</div>
+                    <div class="stat-change ${hazardousCount > 0 ? 'negative' : 'positive'}">
+                        <i class="fas fa-${hazardousCount > 0 ? 'exclamation-triangle' : 'check-circle'}"></i>
+                        ${hazardousCount > 0 ? 'Requires monitoring' : 'All clear'}
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-ruler-combined"></i></div>
+                    <div class="stat-value">${avgDiameter.toFixed(2)}</div>
+                    <div class="stat-label">Avg Diameter (km)</div>
+                    <div class="stat-change neutral">
+                        <i class="fas fa-chart-line"></i>
+                        Size distribution analysis
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <div class="stat-value">${avgVelocity.toFixed(2)}</div>
+                    <div class="stat-label">Avg Velocity (km/s)</div>
+                    <div class="stat-change neutral">
+                        <i class="fas fa-bolt"></i>
+                        Relative to Earth
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update risk levels based on NASA data
+        function updateRiskLevels() {
+            // Calculate risk distribution based on size and velocity
+            let critical = 0, high = 0, medium = 0, low = 0;
+            
+            neoData.forEach(neo => {
+                const riskScore = calculateRiskScore(neo);
+                
+                if (riskScore >= 0.8) critical++;
+                else if (riskScore >= 0.6) high++;
+                else if (riskScore >= 0.4) medium++;
+                else low++;
+            });
+            
+            riskLevels.innerHTML = `
+                <div class="risk-level critical">
+                    <div class="risk-label">CRITICAL</div>
+                    <div class="risk-count">${critical}</div>
+                    <div class="risk-description">High risk asteroids</div>
+                </div>
+                
+                <div class="risk-level high">
+                    <div class="risk-label">HIGH</div>
+                    <div class="risk-count">${high}</div>
+                    <div class="risk-description">Medium risk asteroids</div>
+                </div>
+                
+                <div class="risk-level medium">
+                    <div class="risk-label">MEDIUM</div>
+                    <div class="risk-count">${medium}</div>
+                    <div class="risk-description">Low risk asteroids</div>
+                </div>
+                
+                <div class="risk-level low">
+                    <div class="risk-label">LOW</div>
+                    <div class="risk-count">${low}</div>
+                    <div class="risk-description">Minimal risk asteroids</div>
+                </div>
+            `;
+        }
+        
+        // Update threats table with NASA data
+        function updateThreatsTable() {
+            threatsTableBody.innerHTML = '';
+            
+            // Sort by closest approach date and take top 10
+            const sortedNeos = [...neoData]
+                .filter(neo => neo.close_approach_data.length > 0)
+                .sort((a, b) => {
+                    const dateA = new Date(a.close_approach_data[0].date);
+                    const dateB = new Date(b.close_approach_data[0].date);
+                    return dateA - dateB;
+                })
+                .slice(0, 10);
+            
+            sortedNeos.forEach(neo => {
+                const approach = neo.close_approach_data[0];
+                const row = document.createElement('tr');
+                
+                // Format date
+                const approachDate = new Date(approach.date);
+                const formattedDate = approachDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                // Determine risk level
+                const riskScore = calculateRiskScore(neo);
+                let riskClass = 'low';
+                if (riskScore >= 0.8) riskClass = 'critical';
+                else if (riskScore >= 0.6) riskClass = 'high';
+                else if (riskScore >= 0.4) riskClass = 'medium';
+                
+                // Format asteroid name (shorten if too long)
+                let displayName = neo.name;
+                if (displayName.length > 20) {
+                    displayName = displayName.substring(0, 20) + '...';
+                }
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="asteroid-name" title="${neo.name}">${displayName}</div>
+                        <div class="date">${neo.designation}</div>
+                    </td>
+                    <td>
+                        <span class="risk-badge ${neo.hazardous ? 'critical' : 'low'}">
+                            ${neo.hazardous ? 'YES' : 'NO'}
+                        </span>
+                    </td>
+                    <td>${neo.diameter.avg.toFixed(3)}</td>
+                    <td class="distance">${formatDistance(approach.miss_distance)}</td>
+                    <td>${approach.velocity.toFixed(2)}</td>
+                    <td class="date">${formattedDate}</td>
+                    <td>
+                        <button class="action-btn" onclick="viewAsteroidDetails('${neo.id}')">
+                            <i class="fas fa-eye"></i> Details
+                        </button>
+                    </td>
+                `;
+                
+                threatsTableBody.appendChild(row);
+            });
+        }
+        
+        // Update charts with NASA data
+        function updateCharts() {
+            // Size Distribution Chart
+            const sizeCtx = document.getElementById('sizeDistributionChart').getContext('2d');
+            
+            // Categorize by size
+            const sizeCategories = {
+                'Small (<0.1km)': neoData.filter(neo => neo.diameter.avg < 0.1).length,
+                'Medium (0.1-1km)': neoData.filter(neo => neo.diameter.avg >= 0.1 && neo.diameter.avg < 1).length,
+                'Large (1-10km)': neoData.filter(neo => neo.diameter.avg >= 1 && neo.diameter.avg < 10).length,
+                'Very Large (>10km)': neoData.filter(neo => neo.diameter.avg >= 10).length
+            };
+            
+            // Update size legend
+            const sizeLegend = document.getElementById('sizeLegend');
+            sizeLegend.innerHTML = Object.keys(sizeCategories).map(category => `
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${getSizeColor(category)}"></div>
+                    <span>${category}</span>
+                </div>
+            `).join('');
+            
+            if (sizeDistributionChart) {
+                sizeDistributionChart.destroy();
+            }
+            
+            sizeDistributionChart = new Chart(sizeCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(sizeCategories),
+                    datasets: [{
+                        label: 'Number of Asteroids',
+                        data: Object.values(sizeCategories),
+                        backgroundColor: Object.keys(sizeCategories).map(category => getSizeColor(category)),
+                        borderColor: '#0a0e17',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} asteroids`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(138, 155, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#8a9bb8'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(138, 155, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#8a9bb8',
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Velocity vs Distance Chart (Scatter Plot)
+            const velocityCtx = document.getElementById('velocityChart').getContext('2d');
+            
+            // Prepare scatter plot data
+            const hazardousData = hazardousNeos
+                .filter(neo => neo.close_approach_data.length > 0)
+                .map(neo => ({
+                    x: neo.close_approach_data[0].miss_distance,
+                    y: neo.close_approach_data[0].velocity,
+                    neo: neo
+                }));
+            
+            const nonHazardousData = nonHazardousNeos
+                .filter(neo => neo.close_approach_data.length > 0)
+                .map(neo => ({
+                    x: neo.close_approach_data[0].miss_distance,
+                    y: neo.close_approach_data[0].velocity,
+                    neo: neo
+                }));
+            
+            if (velocityChart) {
+                velocityChart.destroy();
+            }
+            
+            velocityChart = new Chart(velocityCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Non-Hazardous Asteroids',
+                            data: nonHazardousData,
+                            backgroundColor: 'rgba(0, 198, 255, 0.6)',
+                            borderColor: '#00c6ff',
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Potentially Hazardous Asteroids',
+                            data: hazardousData,
+                            backgroundColor: 'rgba(255, 51, 102, 0.6)',
+                            borderColor: '#ff3366',
+                            pointRadius: 8,
+                            pointHoverRadius: 10
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const neo = context.raw.neo;
+                                    return [
+                                        `Name: ${neo.name}`,
+                                        `Diameter: ${neo.diameter.avg.toFixed(3)} km`,
+                                        `Distance: ${formatDistance(context.raw.x)}`,
+                                        `Velocity: ${context.raw.y.toFixed(2)} km/s`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Miss Distance (km) - Log Scale',
+                                color: '#8a9bb8'
+                            },
+                            grid: {
+                                color: 'rgba(138, 155, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#8a9bb8',
+                                callback: function(value, index, values) {
+                                    return formatDistance(value);
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Velocity (km/s)',
+                                color: '#8a9bb8'
+                            },
+                            grid: {
+                                color: 'rgba(138, 155, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#8a9bb8'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Helper function to calculate risk score
+        function calculateRiskScore(neo) {
+            let score = 0;
+            
+            // Base score for hazardous designation
+            if (neo.hazardous) score += 0.3;
+            
+            // Score based on size (larger = more dangerous)
+            if (neo.diameter.avg > 1) score += 0.4;
+            else if (neo.diameter.avg > 0.1) score += 0.2;
+            else score += 0.1;
+            
+            // Score based on closest approach (if available)
+            if (neo.close_approach_data.length > 0) {
+                const approach = neo.close_approach_data[0];
+                // Closer distance = higher risk
+                if (approach.miss_distance < 1000000) score += 0.2; // Within 1M km
+                if (approach.miss_distance < 100000) score += 0.1;  // Within 100k km
+                
+                // Higher velocity = higher risk
+                if (approach.velocity > 30) score += 0.1;
+            }
+            
+            return Math.min(score, 1.0); // Cap at 1.0
+        }
+        
+        // Helper function to format distance
+        function formatDistance(km) {
+            if (km >= 1000000000) {
+                return (km / 1000000000).toFixed(2) + 'B';
+            } else if (km >= 1000000) {
+                return (km / 1000000).toFixed(2) + 'M';
+            } else if (km >= 1000) {
+                return (km / 1000).toFixed(1) + 'K';
+            }
+            return km.toFixed(0);
+        }
+        
+        // Helper function to format date as YYYY-MM-DD
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Helper function to get color for size category
+        function getSizeColor(category) {
+            switch(category) {
+                case 'Small (<0.1km)': return '#00ff9d';
+                case 'Medium (0.1-1km)': return '#00c6ff';
+                case 'Large (1-10km)': return '#ffd166';
+                case 'Very Large (>10km)': return '#ff3366';
+                default: return '#8a9bb8';
+            }
+        }
+        
+        // Function to view asteroid details
+        function viewAsteroidDetails(asteroidId) {
+            const neo = neoData.find(n => n.id === asteroidId);
+            if (neo) {
+                const details = `
+                    Asteroid: ${neo.name}
+                    Designation: ${neo.designation}
+                    Potentially Hazardous: ${neo.hazardous ? 'YES' : 'NO'}
+                    Diameter: ${neo.diameter.min.toFixed(3)} - ${neo.diameter.max.toFixed(3)} km
+                    Average Diameter: ${neo.diameter.avg.toFixed(3)} km
+                    
+                    Close Approach Data:
+                    ${neo.close_approach_data.map(approach => `
+                    - Date: ${approach.date}
+                      Velocity: ${approach.velocity.toFixed(2)} km/s
+                      Miss Distance: ${formatDistance(approach.miss_distance)} km
+                      Orbiting Body: ${approach.orbiting_body}
+                    `).join('')}
+                    
+                    Risk Score: ${(calculateRiskScore(neo) * 100).toFixed(1)}%
+                `;
+                
+                alert(details);
+            } else {
+                alert('Asteroid details not available.');
+            }
+        }
+        
+        // Load sample data for fallback
+        function loadSampleData() {
+            // Sample data structure matching NASA API format
+            const sampleData = {
+                near_earth_objects: {
+                    [formatDate(new Date())]: [
+                        {
+                            id: "2000433",
+                            name: "433 Eros",
+                            designation: "433",
+                            is_potentially_hazardous_asteroid: false,
+                            estimated_diameter: {
+                                kilometers: {
+                                    estimated_diameter_min: 16.84,
+                                    estimated_diameter_max: 34.4
+                                }
+                            },
+                            close_approach_data: [{
+                                close_approach_date: new Date().toISOString().split('T')[0],
+                                relative_velocity: {
+                                    kilometers_per_second: "5.27"
+                                },
+                                miss_distance: {
+                                    kilometers: "75500000"
+                                },
+                                orbiting_body: "Earth"
+                            }]
+                        },
+                        {
+                            id: "2001862",
+                            name: "1862 Apollo",
+                            designation: "1862",
+                            is_potentially_hazardous_asteroid: true,
+                            estimated_diameter: {
+                                kilometers: {
+                                    estimated_diameter_min: 1.2,
+                                    estimated_diameter_max: 2.7
+                                }
+                            },
+                            close_approach_data: [{
+                                close_approach_date: new Date().toISOString().split('T')[0],
+                                relative_velocity: {
+                                    kilometers_per_second: "18.43"
+                                },
+                                miss_distance: {
+                                    kilometers: "3850000"
+                                },
+                                orbiting_body: "Earth"
+                            }]
+                        }
+                    ]
+                }
+            };
+            
+            processNASAData(sampleData);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Watch - NEO Dashboard</title>
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="orbit">
+                <div class="planet"></div>
+                <div class="satellite"></div>
+            </div>
+            <h2>INITIALIZING COSMIC WATCH</h2>
+            <div class="loading-bar">
+                <div class="progress"></div>
+            </div>
+            <p class="loading-text">Syncing with NASA NEO Database...</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="logo">
+                    <i class="fas fa-satellite"></i>
+                    <span>COSMIC <span class="logo-highlight">WATCH</span></span>
+                </div>
+                <div class="nav-links">
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{% url 'details' %}" class="nav-link {% if request.path == '/details/' %}active{% endif %}">
+                        <i class="fas fa-meteor"></i> Asteroids
+                    </a>
+                    <a href="{% url 'analytics' %}" class="nav-link {% if request.path == '/analytics/' %}active{% endif %}">
+                        <i class="fas fa-meteor"></i> analytics
+                    </a>
+                    <!-- <a href="#" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Risk Analysis</a> -->
+                    <!-- <a href="#" class="nav-link"><i class="fas fa-chart-line"></i> Analytics</a> -->
+                     <a href="{% url 'about' %}" class="nav-link {% if request.path == '/about/' %}active{% endif %}">
+                        <i class="fas fa-meteor"></i> about
+                    </a>
+                    
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Astronomer&background=0d1b2a&color=00ffcc&bold=true" alt="User">
+                    <span class="username">Avijit Patra</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <button class="alert-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="alert-count">3</span>
+             
+            </div>
+        </nav>
+
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Real-Time NEO Monitoring</h1>
+                <p class="subtitle">Tracking <span id="active-asteroids">0</span> active near-earth objects</p>
+            </div>
+            <div class="header-right">
+                <div class="time-display">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time">--:--:-- UTC</span>
+                </div>
+                <div class="data-status">
+                    <div class="status-indicator active"></div>
+                    <span>NASA API Connected</span>
+                </div>
+                <button class="refresh-btn" id="refresh-data">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Top Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>HAZARDOUS NEOs</h3>
+                        <p class="stat-value" id="hazardous-count">0</p>
+                        <p class="stat-change">+0 today</p>
+                    </div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>CLOSE APPROACHES</h3>
+                        <p class="stat-value" id="close-approaches">0</p>
+                        <p class="stat-change">Next: <span id="next-approach">--</span></p>
+                    </div>
+                </div>
+
+                <div class="stat-card info">
+                    <div class="stat-icon">
+                        <i class="fas fa-ruler-combined"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>LARGEST NEO</h3>
+                        <p class="stat-value" id="largest-neo">0 km</p>
+                        <p class="stat-change">Diameter</p>
+                    </div>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>FASTEST NEO</h3>
+                        <p class="stat-value" id="fastest-neo">0 km/s</p>
+                        <p class="stat-change">Relative velocity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Asteroid Tracker -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-satellite-dish"></i> Live Asteroid Tracker</h2>
+                            <div class="card-actions">
+                                <button class="action-btn active" data-filter="all">All</button>
+                                <button class="action-btn" data-filter="hazardous">Hazardous</button>
+                                <button class="action-btn" data-filter="close">Close Approach</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="tracker-controls">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="asteroid-search" placeholder="Search asteroids...">
+                                </div>
+                                <select id="sort-select">
+                                    <option value="distance">Closest First</option>
+                                    <option value="size">Largest First</option>
+                                    <option value="speed">Fastest First</option>
+                                </select>
+                            </div>
+                            <div class="asteroids-list" id="asteroids-list">
+                                <!-- Asteroids will be loaded here -->
+                                <div class="loading-skeleton">
+                                    <div class="skeleton-item"></div>
+                                    <div class="skeleton-item"></div>
+                                    <div class="skeleton-item"></div>
+                                    <div class="skeleton-item"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Analysis -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-shield-alt"></i> Risk Analysis Engine</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="risk-meter">
+                                <div class="risk-scale">
+                                    <div class="scale-mark" style="left: 0%">Low</div>
+                                    <div class="scale-mark" style="left: 25%">Medium</div>
+                                    <div class="scale-mark" style="left: 50%">Elevated</div>
+                                    <div class="scale-mark" style="left: 75%">High</div>
+                                    <div class="scale-mark" style="left: 100%">Critical</div>
+                                    <div class="scale-fill" id="risk-fill"></div>
+                                    <div class="risk-indicator" id="risk-indicator"></div>
+                                </div>
+                                <div class="risk-score">
+                                    <h3>Overall Risk Score</h3>
+                                    <div class="score-display">
+                                        <span id="risk-score-value">0</span>
+                                        <span class="score-max">/100</span>
+                                    </div>
+                                    <p class="risk-description" id="risk-description">No immediate threats detected</p>
+                                </div>
+                            </div>
+                            <div class="risk-factors">
+                                <div class="risk-factor">
+                                    <span class="factor-name">Proximity Risk</span>
+                                    <div class="factor-bar">
+                                        <div class="factor-fill" data-value="0"></div>
+                                    </div>
+                                    <span class="factor-value">0%</span>
+                                </div>
+                                <div class="risk-factor">
+                                    <span class="factor-name">Size Impact</span>
+                                    <div class="factor-bar">
+                                        <div class="factor-fill" data-value="0"></div>
+                                    </div>
+                                    <span class="factor-value">0%</span>
+                                </div>
+                                <div class="risk-factor">
+                                    <span class="factor-name">Velocity Factor</span>
+                                    <div class="factor-bar">
+                                        <div class="factor-fill" data-value="0"></div>
+                                    </div>
+                                    <span class="factor-value">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Orbital Visualization -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-globe-americas"></i> Earth Proximity Map</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="orbital-visualization">
+                                <div class="earth-center">
+                                    <div class="earth"></div>
+                                    <div class="orbit-ring" id="orbit-1"></div>
+                                    <div class="orbit-ring" id="orbit-2"></div>
+                                    <div class="orbit-ring" id="orbit-3"></div>
+                                    <div class="asteroid-marker" style="top: 30%; left: 40%;" data-name="2023 DW"></div>
+                                    <div class="asteroid-marker hazardous" style="top: 60%; left: 70%;" data-name="2023 DZ2"></div>
+                                    <div class="asteroid-marker" style="top: 20%; left: 80%;" data-name="2023 FM"></div>
+                                </div>
+                                <div class="orbit-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-dot safe"></div>
+                                        <span>Safe Distance</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot close"></div>
+                                        <span>Close Approach</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot hazardous"></div>
+                                        <span>Potentially Hazardous</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerts Panel -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-bell"></i> Alert System</h2>
+                            <button class="alert-settings">
+                                <i class="fas fa-sliders-h"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="alerts-list" id="alerts-list">
+                                <div class="alert-item critical">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </div>
+                                    <div class="alert-content">
+                                        <h4>2023 DZ2 Close Approach</h4>
+                                        <p>Close approach in 2 days. Distance: 0.0027 AU</p>
+                                        <span class="alert-time">2 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="alert-item warning">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="alert-content">
+                                        <h4>New Hazardous NEO Detected</h4>
+                                        <p>2023 FM classified as potentially hazardous</p>
+                                        <span class="alert-time">5 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="alert-item info">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="alert-content">
+                                        <h4>Data Sync Complete</h4>
+                                        <p>Updated 247 NEO records from NASA API</p>
+                                        <span class="alert-time">Today, 08:30 UTC</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert-setup">
+                                <h4>Set Custom Alert</h4>
+                                <div class="alert-inputs">
+                                    <select id="alert-type">
+                                        <option value="distance">Distance Threshold</option>
+                                        <option value="size">Minimum Size</option>
+                                        <option value="velocity">Velocity Threshold</option>
+                                    </select>
+                                    <input type="text" id="alert-value" placeholder="Value">
+                                    <button class="btn-set-alert">Set Alert</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="action-btn-large">
+                            <i class="fas fa-download"></i>
+                            <span>Export Data</span>
+                        </button>
+                        <button class="action-btn-large">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Generate Report</span>
+                        </button>
+                        <button class="action-btn-large">
+                            <i class="fas fa-video"></i>
+                            <span>Live Telescope</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <div class="footer-left">
+                <p>Data Source: NASA NeoWs API | Last Updated: <span id="last-updated">--:--:-- UTC</span></p>
+            </div>
+            <div class="footer-right">
+                <p>© 2024 Cosmic Watch - Interstellar Asteroid Tracker v2.1</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Asteroid Detail Modal -->
+    <div class="modal" id="asteroid-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Asteroid Details</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-header">
+                    <h3 id="modal-asteroid-name">Loading...</h3>
+                    <span class="hazard-badge" id="modal-hazard-status">Unknown</span>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Estimated Diameter</span>
+                        <span class="detail-value" id="modal-diameter">-- km</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Miss Distance</span>
+                        <span class="detail-value" id="modal-distance">-- km</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Relative Velocity</span>
+                        <span class="detail-value" id="modal-velocity">-- km/s</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Close Approach</span>
+                        <span class="detail-value" id="modal-approach">--</span>
+                    </div>
+                </div>
+                <div class="trajectory-chart">
+                    <h4>Orbital Trajectory</h4>
+                    <div class="chart-placeholder">
+                        <!-- In a real app, this would be a chart -->
+                        <div class="mock-chart">
+                            <div class="orbit-line"></div>
+                            <div class="earth-point"></div>
+                            <div class="asteroid-point"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-watch" id="watch-asteroid">
+                    <i class="far fa-eye"></i> Add to Watchlist
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEO Watch | Join the Sky Guardians</title>
+    <link rel="stylesheet" href="{% static 'register-style.css' %}">
+</head>
+
+<body>
+    <div class="stars-background"></div>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo">
+                <svg class="asteroid-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" fill="#4A90E2"/>
+                    <circle cx="35" cy="35" r="8" fill="#2C5F8D"/>
+                    <circle cx="60" cy="45" r="5" fill="#2C5F8D"/>
+                    <circle cx="50" cy="65" r="6" fill="#2C5F8D"/>
+                </svg>
+                <h1>NEO Watch</h1>
+            </div>
+            
+            <div class="mission-statement">
+                <h2>Track. Analyze. Stay Informed.</h2>
+                <p>Join thousands of citizens monitoring Near-Earth Objects in real-time.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature-item">
+                    <span class="icon">🌍</span>
+                    <div>
+                        <h3>Localized Alerts</h3>
+                        <p>Get notifications for NEOs visible from your location</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">📊</span>
+                    <div>
+                        <h3>Risk Assessment</h3>
+                        <p>Understand impact probabilities in plain language</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">🔭</span>
+                    <div>
+                        <h3>Amateur Astronomy Tools</h3>
+                        <p>Track asteroids with your own telescope</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">📡</span>
+                    <div>
+                        <h3>NASA Data Integration</h3>
+                        <p>Real-time updates from official space agencies</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <strong>32,847</strong>
+                    <span>NEOs Tracked</span>
+                </div>
+                <div class="stat">
+                    <strong>15,234</strong>
+                    <span>Active Users</span>
+                </div>
+                <div class="stat">
+                    <strong>24/7</strong>
+                    <span>Live Monitoring</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="form-container">
+                <h2>Create Your Account</h2>
+                <p class="subtitle">Start monitoring Near-Earth Objects today</p>
+
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'register' %}" id="registrationForm">
+                    {% csrf_token %}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name" 
+                                   placeholder="John" required 
+                                   value="{{ request.POST.first_name }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" 
+                                   placeholder="Doe" required
+                                   value="{{ request.POST.last_name }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" 
+                               placeholder="johndoe@email.com" required
+                               value="{{ request.POST.email }}">
+                        <small>You'll receive NEO alerts at this email</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" 
+                                   placeholder="••••••••" required>
+                            <div class="password-strength" id="passwordStrength"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="re_password">Confirm Password</label>
+                            <input type="password" id="re_password" name="re_password" 
+                                   placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="email_alerts" name="email_alerts" checked>
+                        <label for="email_alerts">
+                            Send me email alerts for high-priority NEO events
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="newsletter" name="newsletter">
+                        <label for="newsletter">
+                            Subscribe to monthly astronomy newsletter
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">
+                            I agree to the Terms of Service and Privacy Policy
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <span>Register</span>
+                        <svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <div class="divider">
+                        <span>or</span>
+                    </div>
+
+                    <button type="button" class="btn-secondary google-btn">
+                        <svg width="18" height="18" viewBox="0 0 18 18">
+                            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+                            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <p class="login-link">
+                        Already have an account? 
+                        <a href="{% url 'login' %}">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password strength indicator
+        const passwordInput = document.getElementById('password');
+        const strengthIndicator = document.getElementById('passwordStrength');
+
+        passwordInput.addEventListener('input', function () {
+            const password = this.value;
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+            const levels = ['Weak', 'Fair', 'Good', 'Strong'];
+            const colors = ['#e74c3c', '#f39c12', '#3498db', '#2ecc71'];
+
+            if (password.length > 0) {
+                strengthIndicator.textContent =
+                    `Password strength: ${levels[strength - 1] || 'Weak'}`;
+                strengthIndicator.style.color =
+                    colors[strength - 1] || '#e74c3c';
+            } else {
+                strengthIndicator.textContent = '';
+            }
+        });
+
+        // Form validation (password match only)
+        document.getElementById('registrationForm').addEventListener('submit', function (e) {
+            const password = document.getElementById('password').value;
+            const rePassword = document.getElementById('re_password').value;
+
+            if (password !== rePassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+    </script>
+</body>
+</html>

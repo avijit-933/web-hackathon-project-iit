@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <link rel="stylesheet" href="{% static 'asteroid_details.css' %}">
+    <style>
+        /* Keep all the CSS from your original file here */
+        /* Or better, move it to a separate CSS file */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="{% url 'dashboard' %}" class="back-btn">
+                <span>←</span> Back to Dashboard
+            </a>
+            <div style="text-align: right;">
+                <h2 style="color: #a78bfa; margin-bottom: 5px;">NASA NEO API</h2>
+                <p style="color: #9ca3af; font-size: 0.9rem;">Search Near Earth Objects</p>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-container">
+            <h2><span class="icon">🔍</span> Search Asteroid</h2>
+            <div class="search-box">
+                <input type="text" 
+                       id="asteroid-search" 
+                       class="search-input" 
+                       placeholder="Enter Asteroid ID (e.g., 3542519, 3726710) or name">
+                <button id="search-btn" class="search-btn" onclick="searchAsteroid()">
+                    <span class="icon">🚀</span> Search
+                </button>
+            </div>
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>Fetching asteroid data from NASA...</p>
+            </div>
+            <div class="error-message" id="error-message"></div>
+            <p style="color: #9ca3af; font-size: 0.9rem; margin-top: 10px;">
+                Try: "3542519", "3726710", or search by name. Data provided by NASA's Near Earth Object Web Service.
+            </p>
+        </div>
+
+        <!-- Asteroid Details (initially hidden) -->
+        <div id="asteroid-details" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                <h1 id="asteroid-name">---</h1>
+                <span id="hazard-badge" class="hazard-badge">---</span>
+            </div>
+
+            <div class="grid">
+                <!-- Orbit Information -->
+                <div class="card">
+                    <h2><span class="icon">🛸</span> Orbit Data</h2>
+                    <div class="info-row">
+                        <span class="info-label">Close Approach Date</span>
+                        <span class="info-value" id="approach-date">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Approach Time (UTC)</span>
+                        <span class="info-value" id="approach-time">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Distance from Earth</span>
+                        <span class="info-value" id="distance">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Relative Velocity</span>
+                        <span class="info-value" id="velocity">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Miss Distance (Lunar)</span>
+                        <span class="info-value" id="lunar-distance">---</span>
+                    </div>
+                </div>
+
+                <!-- Physical Characteristics -->
+                <div class="card">
+                    <h2><span class="icon">📏</span> Physical Data</h2>
+                    <div class="info-row">
+                        <span class="info-label">Estimated Diameter (Min)</span>
+                        <span class="info-value" id="diameter-min">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Estimated Diameter (Max)</span>
+                        <span class="info-value" id="diameter-max">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Absolute Magnitude</span>
+                        <span class="info-value" id="magnitude">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Potentially Hazardous</span>
+                        <span class="info-value" id="hazardous">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Orbit ID</span>
+                        <span class="info-value" id="orbit-id">---</span>
+                    </div>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="card">
+                    <h2><span class="icon">⚠️</span> Risk Assessment</h2>
+                    <div class="info-row">
+                        <span class="info-label">Risk Level</span>
+                        <span class="info-value" id="risk-level">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Size Category</span>
+                        <span class="info-value" id="size-category">---</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Approach Distance Rating</span>
+                        <span class="info-value" id="distance-rating">---</span>
+                    </div>
+                    
+                    <div id="risk-indicator" class="risk-indicator">
+                        <div class="risk-dot" id="risk-dot"></div>
+                        <div>
+                            <strong id="risk-title">Calculating...</strong>
+                            <p style="font-size: 0.85rem; color: #9ca3af; margin-top: 5px;" id="risk-description">---</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D Visualization -->
+            <div class="visualization-container">
+                <h2 style="color: #a78bfa; margin-bottom: 20px;"><span class="icon">🌌</span> 3D Orbit Visualization</h2>
+                <canvas id="orbit-canvas"></canvas>
+                <div class="controls">
+                    <button class="control-btn active" onclick="toggleAnimation()">⏸️ Pause</button>
+                    <button class="control-btn" onclick="resetView()">🔄 Reset View</button>
+                    <button class="control-btn" onclick="toggleLabels()">🏷️ Toggle Labels</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Your JavaScript file -->
+    <script src="{% static 'js/asteroid_details.js' %}"></script>
+    
+    <!-- Optional: CSRF token for API requests -->
+    <script>
+        // Get CSRF token for Django API calls
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+    </script>
+</body>
+</html>
