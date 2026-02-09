@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
+    
     'app1'
 ]
 
@@ -132,4 +132,7 @@ NASA_API_KEY = '68qAj5eRO28O0LBVBJUS596b6kYwhHGsgkE4DgMQ' # Replace with actual 
 NASA_API_BASE = 'https://api.nasa.gov/neo/rest/v1'
 
 
+# ALLOWED_HOSTS = ["*"]
+# STATIC_URL = '/static/'
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
 
